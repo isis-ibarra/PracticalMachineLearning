@@ -2,10 +2,7 @@
 title: "Prediction Assignment"
 author: "Isis Ibarra"
 date: "17/11/2018"
-output:
-  html_document:
-    keep_md: yes
-  pdf_document: default
+output: rmarkdown::html_vignette
 ---
 
 ```{r setup, include=FALSE}
@@ -89,7 +86,7 @@ To get a better insight of the relationship between the variables, a correlation
 
 ```{r correlation}
 plotCorrelation <- cor(trainSet[, -54])
-corrplot(plotCorrelation, method = "circle", order = "AOE", tl.cex = 0.5, tl.col = rgb(0, 0, 0), title = "Figure 1: Correlation Plot", mar=c(0,0,1,0))
+corrplot(plotCorrelation, method = "color", order = "AOE", type = "lower", tl.cex = 0.5, tl.col = rgb(0, 0, 0), title = "Figure 1: Correlation Plot", mar=c(0,0,1,0))
 ```
   
 In Figure 1: Correlation Plot, highly possitively correlated values are painted in dark blue, while negatively are colored dark red. 
