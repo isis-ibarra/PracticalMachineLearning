@@ -1,0 +1,164 @@
+---
+title: "Prediction Assignment"
+author: "Isis Ibarra"
+date: "17/11/2018"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Overview
+
+People regularly quantify how much of an excercise they do, but rarely measure their performance. In this investigation, data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants will be used to predict the manner of the subject. Random forest, decision tree and generalized boosted model will be the methods implemented to determine the best predicion. R programming will be the major tool used in the project. 
+
+## 2. Data preparation
+
+The data for this project is taken from the Human Activity Recognition project by Groupware@LES. For more information, please visit their [website](http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har).
+
+As the first step in this investigation, data preparation is needed. The following code is used to load the corresponding libraries.
+
+```{r libraries, message = FALSE}
+library(knitr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(randomForest)
+library(corrplot)
+library(e1071)
+```
+
+The next step is loading the dataset from the URL provided, and store the information into the `training` and `testing` variables. 
+```{r dataDownload, message = FALSE}
+trainURL <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+testURL <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+trainFile <- "pml-traininig.csv"
+testFile <- "pml-testing.csv"
+
+if(!file.exists(trainFile))
+{
+  download.file(trainURL, destfile = trainFile)
+}
+if(!file.exists(testFile))
+{
+  download.file(testURL, destfile = testFile)
+}
+
+training <- read.csv(trainFile)
+testing <- read.csv(testFile)
+```
+
+In order to have a better predictive model, `training` dataset is partitioned into 2 subsets:   
+* `trainSet`: consists of 70% of the dataset; will be used for the modeling process   
+* `validationSet`: consists of 30% of the dataset; will be used for cross validation
+
+```{r dataPartitioning}
+trainingPartition <- createDataPartition(training$classe, p = 0.7, list = FALSE)
+trainSet <- training[trainingPartition, ]
+validationSet <- training[-trainingPartition, ]
+```
+
+To ensure classification rules can be applied to the dataset, data cleansing must be done. The following considerations will be entered:   
+1. Remove the constant and almost constant variables accross the sample   
+2. Remove variables composed of at least 95% of missing values or empty strings  
+3. Remove identification variables, such as time and user information
+
+```{r dataCleaning}
+# Remove constant and almost constant varibales across the sample
+NZV <- nearZeroVar(trainSet)
+trainSet <- trainSet[, -NZV]
+validationSet <- validationSet[, -NZV]
+# Remove variables with mostly missing values
+na <- sapply(trainSet, function(x) mean(is.na(x))) > 0.95
+trainSet <- trainSet[, na == FALSE]
+validationSet <- validationSet[, na == FALSE]
+# Remove identification variables 
+trainSet <- trainSet[, -(1:5)]
+validationSet  <- validationSet[, -(1:5)]
+```
+
+After this cleansing process, there are 53 variables suited for analysis. 
+
+## 3. Exploratory analysis
+To get a better insight of the relationship between the variables, a correlation analyisis will be done. 
+
+```{r correlation}
+plotCorrelation <- cor(trainSet[, -54])
+corrplot(plotCorrelation, method = "circle", order = "AOE", tl.cex = 0.5, tl.col = rgb(0, 0, 0), title = "Figure 1: Correlation Plot", mar=c(0,0,1,0))
+```
+  
+In Figure 1: Correlation Plot, highly possitively correlated values are painted in dark blue, while negatively are colored dark red. 
+
+## 4. Predictive models
+Now, three popular methods will be applied to model the regressions in the training dataset. A confusion matrix is plotted at the end of each analysis to better visualize the accuracy of the models.
+
+### 4.1 Random forest
+```{r randomForest}
+# Set seed for reproducibility
+set.seed(1234)
+# Create random forest model
+controlRF <- trainControl(method = "cv", number = 3, verboseIter = FALSE)
+modelRF <- train(classe ~ ., data = trainSet, method = "rf", trControl = controlRF)
+modelRF$finalModel
+# Predict using the test dataset
+predictRF <- predict(modelRF, newdata = validationSet)
+confusionMatrixRF <- confusionMatrix(predictRF, validationSet$classe)
+confusionMatrixRF
+# Plot results
+plot(confusionMatrixRF$table, col = confusionMatrixRF$byClass,
+    main = paste("Figure 2: Random Forest Plot - Accuracy =",
+                 round(confusionMatrixRF$overall['Accuracy'], 3)))
+
+```
+
+### 4.2 Decision tree
+```{r decisionTree}
+# Set seed for reproducibility
+set.seed(1234)
+# Create decision tree model
+modelDT <- rpart(classe ~ ., data = trainSet, method = "class")
+fancyRpartPlot(modelDT, main = "Figure 3: Decision Tree")
+# Predict using the test dataset
+predictDT <- predict(modelDT, newdata = validationSet, type = "class")
+confusionMatrixDT <- confusionMatrix(predictDT, validationSet$classe)
+confusionMatrixDT
+# Plot results
+plot(confusionMatrixDT$table, col = confusionMatrixDT$byClass,
+    main = paste("Figure 4: Decision Tree Plot - Accuracy =",
+                 round(confusionMatrixDT$overall['Accuracy'], 3)))
+```
+
+### 4.3 Generalized boosted model
+```{r gbm}
+# Set seed for reproducibility
+set.seed(1234)
+# Create decision tree model
+controlGBM <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
+modelGBM <- train(classe ~ ., data = trainSet, method = "gbm", trControl = controlGBM, verbose = FALSE)
+modelGBM$finalModel
+# Predict using the test dataset
+predictGBM <- predict(modelGBM, newdata = validationSet)
+confusionMatrixGBM <- confusionMatrix(predictGBM, validationSet$classe)
+confusionMatrixGBM
+# Plot results
+plot(confusionMatrixGBM$table, col = confusionMatrixGBM$byClass,
+    main = paste("Figure 5: Generalized Boosted Model Plot - Accuracy =",
+                 round(confusionMatrixGBM$overall['Accuracy'], 3)))
+```
+
+## 5. Applying selected model to test data
+As for this investigation, the accuracy of the selected models is the following:  
+* Random forest: 0.999  
+* Decision tree: 0.729  
+* GBM: 0.989
+Therefore, the random forest method must be used to prefict the results. 
+```{r prediction}
+predict <- predict(modelRF, newdata = testing)
+predict 
+```
+
