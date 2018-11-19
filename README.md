@@ -1,5 +1,15 @@
 # PracticalMachineLearning
-Prediction Assignment Writeup for Practical Machine Learning 
+
+## Content
+
+The following documents are uploaded to this repo: 
+1. PredictionAssignment.Rmd
+2. PredictionAssignment.html --> too large for a preview, so please refere to the pdf file
+3. PredictionAssignment.pdf
+4. correlation-1.png
+5. decisionTree-1.png
+6. gbm-1.png
+7. randomForest-1.png
 
 ## Background
 
@@ -17,13 +27,3 @@ https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
 The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
 
-## Content
-
-The following documents are uploaded to this repo: 
-1. PredictionAssignment.Rmd
-2. PredictionAssignment.html --> too large for a preview, so please refere to the pdf file
-3. PredictionAssignment.pdf
-4. correlation-1.png
-5. decisionTree-1.png
-6. gbm-1.png
-7. randomForest-1.png
