@@ -2,7 +2,10 @@
 title: "Prediction Assignment"
 author: "Isis Ibarra"
 date: "17/11/2018"
-output: rmarkdown::html_vignette
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -119,14 +122,13 @@ plot(confusionMatrixRF$table, col = confusionMatrixRF$byClass,
 set.seed(1234)
 # Create decision tree model
 modelDT <- rpart(classe ~ ., data = trainSet, method = "class")
-fancyRpartPlot(modelDT, main = "Figure 3: Decision Tree")
 # Predict using the test dataset
 predictDT <- predict(modelDT, newdata = validationSet, type = "class")
 confusionMatrixDT <- confusionMatrix(predictDT, validationSet$classe)
 confusionMatrixDT
 # Plot results
 plot(confusionMatrixDT$table, col = confusionMatrixDT$byClass,
-    main = paste("Figure 4: Decision Tree Plot - Accuracy =",
+    main = paste("Figure 3: Decision Tree Plot - Accuracy =",
                  round(confusionMatrixDT$overall['Accuracy'], 3)))
 ```
 
@@ -144,7 +146,7 @@ confusionMatrixGBM <- confusionMatrix(predictGBM, validationSet$classe)
 confusionMatrixGBM
 # Plot results
 plot(confusionMatrixGBM$table, col = confusionMatrixGBM$byClass,
-    main = paste("Figure 5: Generalized Boosted Model Plot - Accuracy =",
+    main = paste("Figure 4: Generalized Boosted Model Plot - Accuracy =",
                  round(confusionMatrixGBM$overall['Accuracy'], 3)))
 ```
 
